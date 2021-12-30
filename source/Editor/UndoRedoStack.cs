@@ -25,6 +25,7 @@ namespace Snowberry.Editor {
 
         public bool Undo() {
             if (!CanUndo()) return false;
+            Editor.SelectedEntities = null;
             var action = undoActions.First.Value;
             undoActions.RemoveFirst();
             redoActions.AddFirst(action);
@@ -34,6 +35,7 @@ namespace Snowberry.Editor {
 
         public bool Redo() {
             if (!CanRedo()) return false;
+            Editor.SelectedEntities = null;
             var action = redoActions.First.Value;
             redoActions.RemoveFirst();
             undoActions.AddFirst(action);
