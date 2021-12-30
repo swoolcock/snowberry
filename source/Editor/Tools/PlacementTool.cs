@@ -6,6 +6,7 @@ using Snowberry.Editor.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Snowberry.Editor.Actions;
 
 namespace Snowberry.Editor.Tools {
     public class PlacementTool : Tool {
@@ -64,6 +65,7 @@ namespace Snowberry.Editor.Tools {
                 if (toAdd.Name != "player")
                     toAdd.EntityID = highestID + 1;
                 Editor.SelectedRoom.AddEntity(toAdd);
+                Editor.UndoRedoStack.PushAction(new AddEntityAction(toAdd));
             }
 
             RefreshPreview(lastPlacement != selection);
