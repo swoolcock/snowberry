@@ -130,6 +130,7 @@ namespace Snowberry.Editor {
         internal static Room SelectedRoom;
         internal static int SelectedFillerIndex = -1;
         internal static List<EntitySelection> SelectedEntities;
+        internal static UndoRedoStack UndoRedoStack = new ();
 
         public UIToolbar Toolbar;
         public UIElement ToolPanel;
@@ -259,6 +260,14 @@ namespace Snowberry.Editor {
                 }
             };
             ui.AddBelow(export);
+
+            ui.AddBelow(new UIButton("Undo", Fonts.Regular, 6, 6) {
+                OnPress = () => UndoRedoStack.Undo(),
+            });
+
+            ui.AddBelow(new UIButton("Redo", Fonts.Regular, 6, 6) {
+                OnPress = () => UndoRedoStack.Redo(),
+            });
 
             SwitchTool(0);
         }
