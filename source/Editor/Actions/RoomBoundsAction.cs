@@ -11,7 +11,7 @@ namespace Snowberry.Editor.Actions {
 
             var positionDiff = this.PositionDiff();
             if (positionDiff != Vector2.Zero) {
-                Children = Room.AllEntities.Select(entity => new MoveEntityAction(entity, positionDiff));
+                Children = Room.AllEntities.Select(entity => new MoveEntityAction(entity, positionDiff * 8));
             }
         }
 

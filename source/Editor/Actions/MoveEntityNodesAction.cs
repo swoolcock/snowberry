@@ -19,7 +19,7 @@ namespace Snowberry.Editor.Actions {
         public override void Apply() {
             var diff = this.Diff();
             foreach (var index in Nodes) {
-                Entity.MoveNode(index, diff * 8);
+                Entity.MoveNode(index, diff);
             }
             base.Apply();
         }
@@ -28,7 +28,7 @@ namespace Snowberry.Editor.Actions {
             base.Unapply();
             var diff = this.Diff();
             foreach (var index in Nodes) {
-                Entity.MoveNode(index, -diff * 8);
+                Entity.MoveNode(index, -diff);
             }
         }
     }

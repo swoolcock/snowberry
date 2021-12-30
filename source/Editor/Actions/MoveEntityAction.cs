@@ -15,13 +15,13 @@ namespace Snowberry.Editor.Actions {
         }
 
         public override void Apply() {
-            Entity.Move(this.Diff() * 8);
+            Entity.Move(this.Diff());
             base.Apply();
         }
 
         public override void Unapply() {
             base.Unapply();
-            Entity.Move(-this.Diff() * 8);
+            Entity.Move(-this.Diff());
         }
     }
 }
