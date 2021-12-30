@@ -266,10 +266,10 @@ namespace Snowberry.Editor.Tools {
                             //   for each tile found:
                             //     check their neighbors
                             if (!holoSetTiles[x, y]) {
-                                char origTile = Editor.SelectedRoom.GetTile(fg, new Vector2((x + Editor.SelectedRoom.X) * 8, (y + Editor.SelectedRoom.Y) * 8));
+                                char origTile = Editor.SelectedRoom.GetTile(fg, x, y);
 
                                 bool inside(int cx, int cy) {
-                                    return (cx >= 0 && cy >= 0 && cx < Editor.SelectedRoom.Width && cy < Editor.SelectedRoom.Height) && Editor.SelectedRoom.GetTile(fg, new Vector2((cx + Editor.SelectedRoom.X) * 8, (cy + Editor.SelectedRoom.Y) * 8)) == origTile;
+                                    return (cx >= 0 && cy >= 0 && cx < Editor.SelectedRoom.Width && cy < Editor.SelectedRoom.Height) && Editor.SelectedRoom.GetTile(fg, cx, cy) == origTile;
                                 }
 
                                 Queue<Point> toCheck = new Queue<Point>();

@@ -160,39 +160,62 @@ namespace Snowberry.Editor {
             }
         }
 
-        public char GetTile(bool fg, Vector2 at) {
-            return fg ? GetFgTile(at) : GetBgTile(at);
+        #region Tilemap Helpers
+
+        public char GetFgTileWorld(Vector2 at) => GetTileWorld(true, at);
+        public char GetBgTileWorld(Vector2 at) => GetTileWorld(false, at);
+        public bool SetFgTileWorld(Vector2 at, char tile) => SetTileWorld(true, at, tile);
+        public bool SetBgTileWorld(Vector2 at, char tile) => SetTileWorld(false, at, tile);
+        public char GetFgTile(int x, int y) => GetTile(true, x, y);
+        public char GetBgTile(int x, int y) => GetTile(false, x, y);
+        public bool SetFgTile(int x, int y, char tile) => SetTile(true, x, y, tile);
+        public bool SetBgTile(int x, int y, char tile) => SetTile(false, x, y, tile);
+        public string GetFgTilesWorld(Rectangle at) => GetTilesWorld(true, at);
+        public string GetBgTilesWorld(Rectangle at) => GetTilesWorld(false, at);
+        public bool SetFgTilesWorld(Rectangle at, string tiles) => SetTilesWorld(true, at, tiles);
+        public bool SetBgTilesWorld(Rectangle at, string tiles) => SetTilesWorld(false, at, tiles);
+        public string GetFgTiles(Rectangle at) => GetTiles(true, at);
+        public string GetBgTiles(Rectangle at) => GetTiles(false, at);
+        public bool SetFgTiles(Rectangle at, string tiles) => SetTiles(true, at, tiles);
+        public bool SetBgTiles(Rectangle at, string tiles) => SetTiles(false, at, tiles);
+        public char GetTileWorld(bool fg, Vector2 at) => GetTile(fg, (int)(at.X - Position.X), (int)(at.Y - Position.Y));
+        public bool SetTileWorld(bool fg, Vector2 at, char tile) => SetTile(fg, (int)(at.X - Position.X), (int)(at.Y - Position.Y), tile);
+        public string GetTilesWorld(bool fg, Rectangle at) => GetTiles(fg, new Rectangle((int)(at.Location.X + Position.X), (int)(at.Location.Y + Position.Y), at.Width, at.Height));
+        public bool SetTilesWorld(bool fg, Rectangle at, string tiles) => SetTiles(fg, new Rectangle((int)(at.Location.X + Position.X), (int)(at.Location.Y + Position.Y), at.Width, at.Height), tiles);
+
+        public char GetTile(bool fg, int x, int y) => (fg ? fgTileMap : bgTileMap)[x, y];
+
+        public bool SetTile(bool fg, int x, int y, char tile, bool autotile = false) {
+            var tileMap = fg ? fgTileMap : bgTileMap;
+            if (tileMap[x, y] == tile) return false;
+            tileMap[x, y] = tile;
+            if (autotile) Autotile();
+            return true;
         }
 
-        public char GetFgTile(Vector2 at) {
-            Vector2 p = (at - Position * 8) / 8;
-            return fgTileMap[(int)p.X, (int)p.Y];
-        }
-
-        public char GetBgTile(Vector2 at) {
-            Vector2 p = (at - Position * 8) / 8;
-            return bgTileMap[(int)p.X, (int)p.Y];
-        }
-
-        public bool SetFgTile(int x, int y, char tile) {
-            char orig = fgTileMap[x, y];
-            if (orig != tile) {
-                fgTileMap[x, y] = tile;
-                return true;
+        public string GetTiles(bool fg, Rectangle at) {
+            var tileMap = fg ? fgTileMap : bgTileMap;
+            StringBuilder sb = new StringBuilder(at.Width * at.Height);
+            for (int y = 0; y < at.Height; y++) {
+                for (int x = 0; x < at.Width; x++) {
+                    sb.Append(tileMap[at.X + x, at.Y + y]);
+                }
             }
-
-            return false;
+            return sb.ToString();
         }
 
-        public bool SetBgTile(int x, int y, char tile) {
-            char orig = bgTileMap[x, y];
-            if (orig != tile) {
-                bgTileMap[x, y] = tile;
-                return true;
+        public bool SetTiles(bool fg, Rectangle at, string tiles, bool autotile = false) {
+            var rv = false;
+            for (int y = 0; y < at.Height; y++) {
+                for (int x = 0; x < at.Width; x++) {
+                    rv |= SetTile(fg, at.X + x, at.Y + y, tiles[x + y * at.Width]);
+                }
             }
-
-            return false;
+            if (rv && autotile) Autotile();
+            return rv;
         }
+
+        #endregion
 
         public void Autotile() {
             fgTiles = GFX.FGAutotiler.GenerateMap(fgTileMap, new Autotiler.Behaviour() { EdgesExtend = true }).TileGrid.Tiles;
