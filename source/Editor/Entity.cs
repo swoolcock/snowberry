@@ -1,4 +1,5 @@
-﻿using Celeste;
+﻿using System;
+using Celeste;
 using Microsoft.Xna.Framework;
 using Monocle;
 using System.Collections.Generic;
@@ -61,14 +62,14 @@ namespace Snowberry.Editor {
         public Entity SetPosition(Vector2 position) {
             Position = position;
             updateSelection = true;
-            Room.MarkTrackedEntityDirty(this);
+            Room?.MarkTrackedEntityDirty(this);
             return this;
         }
 
         public void Move(Vector2 amount) {
             Position += amount;
             updateSelection = true;
-            Room.MarkTrackedEntityDirty(this);
+            Room?.MarkTrackedEntityDirty(this);
         }
 
         public void SetNode(int i, Vector2 position) {
@@ -77,7 +78,7 @@ namespace Snowberry.Editor {
                 updateSelection = true;
             }
 
-            Room.MarkTrackedEntityDirty(this);
+            Room?.MarkTrackedEntityDirty(this);
         }
 
         public void MoveNode(int i, Vector2 amount) {
@@ -86,31 +87,31 @@ namespace Snowberry.Editor {
                 updateSelection = nodesChanged = true;
             }
 
-            Room.MarkTrackedEntityDirty(this);
+            Room?.MarkTrackedEntityDirty(this);
         }
 
         public void AddNode(Vector2 position) {
             nodes.Add(position);
             nodesChanged = true;
-            Room.MarkTrackedEntityDirty(this);
+            Room?.MarkTrackedEntityDirty(this);
         }
 
         internal void ResetNodes() {
             nodes.Clear();
             nodesChanged = true;
-            Room.MarkTrackedEntityDirty(this);
+            Room?.MarkTrackedEntityDirty(this);
         }
 
         public void SetWidth(int width) {
             Width = width;
             updateSelection = true;
-            Room.MarkTrackedEntityDirty(this);
+            Room?.MarkTrackedEntityDirty(this);
         }
 
         public void SetHeight(int heigth) {
             Height = heigth;
             updateSelection = true;
-            Room.MarkTrackedEntityDirty(this);
+            Room?.MarkTrackedEntityDirty(this);
         }
 
         public virtual void ChangeDefault() { }
@@ -148,7 +149,7 @@ namespace Snowberry.Editor {
         public virtual void ApplyDefaults() { }
 
         private Entity InitializeData(EntityData entityData) {
-            Vector2 offset = Room.Position * 8;
+            Vector2 offset = (Room?.Position ?? Vector2.Zero) * 8;
 
             Position = entityData.Position + offset;
             Width = entityData.Width;
