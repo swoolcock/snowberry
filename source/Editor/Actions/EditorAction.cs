@@ -20,7 +20,7 @@ namespace Snowberry.Editor.Actions {
         public Action ApplyAction { get; set; }
         public Action UnapplyAction { get; set; }
 
-        public EditorAction(params EditorAction[] children) {
+        public EditorAction(IEnumerable<EditorAction> children = null) {
             Children = children;
         }
 
