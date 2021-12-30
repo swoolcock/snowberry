@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework;
 using Monocle;
 using Snowberry.Editor.UI;
 using System;
+using Celeste.Mod;
+using Snowberry.Editor.Actions;
 
 namespace Snowberry.Editor.Tools {
     public class RoomTool : Tool {
@@ -32,41 +34,44 @@ namespace Snowberry.Editor.Tools {
         }
 
         public override void Update(bool canClick) {
+            var room = Editor.SelectedRoom;
+
             // refresh the display
-            if (lastSelected != Editor.SelectedRoom || lastFillerSelected != Editor.SelectedFillerIndex || ScheduledRefresh) {
+            if (lastSelected != room || lastFillerSelected != Editor.SelectedFillerIndex || ScheduledRefresh) {
                 justSwitched = true;
                 ScheduledRefresh = false;
-                lastSelected = Editor.SelectedRoom;
+                lastSelected = room;
                 lastFillerSelected = Editor.SelectedFillerIndex;
                 if (Editor.Instance.ToolPanel is UIRoomSelectionPanel selectionPanel)
                     selectionPanel.Refresh();
-                if (Editor.SelectedRoom != null) {
-                    lastRoomOffset = Editor.SelectedRoom.Position - (Editor.Mouse.World / 8);
-                    oldRoomBounds = Editor.SelectedRoom.Bounds;
+                if (room != null) {
+                    lastRoomOffset = room.Position - (Editor.Mouse.World / 8);
+                    oldRoomBounds = room.Bounds;
                 }
             }
 
             // move, resize, add rooms
-            if (canClick && Editor.SelectedRoom != null && !justSwitched) {
+            if (canClick && room != null && !justSwitched) {
                 if (MInput.Mouse.PressedLeftButton) {
-                    lastRoomOffset = Editor.SelectedRoom.Position - (Editor.Mouse.World / 8);
+                    lastRoomOffset = room.Position - (Editor.Mouse.World / 8);
                     // check if the mouse is 8 pixels from the room's borders
                     resizingX = resizingY = false;
-                    if (Math.Abs(Editor.Mouse.World.X / 8f - (Editor.SelectedRoom.Position.X + Editor.SelectedRoom.Width)) < 1)
+                    if (Math.Abs(Editor.Mouse.World.X / 8f - (room.Position.X + room.Width)) < 1)
                         resizingX = true;
-                    if (Math.Abs(Editor.Mouse.World.Y / 8f - (Editor.SelectedRoom.Position.Y + Editor.SelectedRoom.Height)) < 1)
+                    if (Math.Abs(Editor.Mouse.World.Y / 8f - (room.Position.Y + room.Height)) < 1)
                         resizingY = true;
-                    oldRoomBounds = Editor.SelectedRoom.Bounds;
+                    oldRoomBounds = room.Bounds;
                 } else if (MInput.Mouse.CheckLeftButton) {
                     Vector2 world = Editor.Mouse.World / 8;
                     var offset = lastRoomOffset ?? Vector2.Zero;
                     var newX = (int)(world + offset).X;
                     var newY = (int)(world + offset).Y;
-                    var diff = new Vector2(newX - Editor.SelectedRoom.Bounds.X, newY - Editor.SelectedRoom.Bounds.Y);
+                    var diff = new Vector2(newX - room.Bounds.X, newY - room.Bounds.Y);
+
                     if (!resizingX && !resizingY) {
-                        Editor.SelectedRoom.Bounds.X = (int)(world + offset).X;
-                        Editor.SelectedRoom.Bounds.Y = (int)(world + offset).Y;
-                        foreach (var e in Editor.SelectedRoom.AllEntities) {
+                        room.Bounds.X = (int)(world + offset).X;
+                        room.Bounds.Y = (int)(world + offset).Y;
+                        foreach (var e in room.AllEntities) {
                             e.Move(diff * 8);
                             for (int i = 0; i < e.Nodes.Length; i++) {
                                 e.MoveNode(i, diff * 8);
@@ -74,20 +79,21 @@ namespace Snowberry.Editor.Tools {
                         }
                     } else {
                         if (resizingX) {
-                            newWidth = (int)Math.Ceiling(world.X - Editor.SelectedRoom.Bounds.X);
-                            Editor.SelectedRoom.Bounds.Width = Math.Max(newWidth, 1);
+                            newWidth = (int)Math.Ceiling(world.X - room.Bounds.X);
+                            room.Bounds.Width = Math.Max(newWidth, 1);
                         }
 
                         if (resizingY) {
-                            newHeight = (int)Math.Ceiling(world.Y - Editor.SelectedRoom.Bounds.Y);
-                            Editor.SelectedRoom.Bounds.Height = Math.Max(newHeight, 1);
+                            newHeight = (int)Math.Ceiling(world.Y - room.Bounds.Y);
+                            room.Bounds.Height = Math.Max(newHeight, 1);
                         }
                     }
                 } else {
                     lastRoomOffset = null;
-                    if (!oldRoomBounds.Equals(Editor.SelectedRoom.Bounds)) {
-                        oldRoomBounds = Editor.SelectedRoom.Bounds;
-                        Editor.SelectedRoom.UpdateBounds();
+                    if (!oldRoomBounds.Equals(room.Bounds)) {
+                        Editor.UndoRedoStack.PushAction(new RoomBoundsAction(room, oldRoomBounds, room.Bounds));
+                        oldRoomBounds = room.Bounds;
+                        room.UpdateBounds();
                     }
 
                     resizingX = resizingY = false;
@@ -101,7 +107,7 @@ namespace Snowberry.Editor.Tools {
 
             // room creation
             if (canClick) {
-                if (Editor.SelectedRoom == null) {
+                if (room == null) {
                     if (MInput.Mouse.CheckLeftButton) {
                         var lastPress = (Editor.Instance.worldClick / 8).Ceiling() * 8;
                         var mpos = (Editor.Mouse.World / 8).Ceiling() * 8;

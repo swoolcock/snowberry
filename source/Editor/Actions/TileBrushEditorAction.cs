@@ -13,7 +13,14 @@ namespace Snowberry.Editor.Actions {
             DirtyRegion = dirtyRegion;
         }
 
-        public override void Apply() => Room.SetTiles(ForegroundLayer, DirtyRegion, NewValue, true);
-        public override void Unapply() => Room.SetTiles(ForegroundLayer, DirtyRegion, OldValue, true);
+        public override void Apply() {
+            Room.SetTiles(ForegroundLayer, DirtyRegion, NewValue, true);
+            base.Apply();
+        }
+
+        public override void Unapply() {
+            base.Unapply();
+            Room.SetTiles(ForegroundLayer, DirtyRegion, OldValue, true);
+        }
     }
 }

@@ -1,15 +1,47 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Celeste.Mod;
 using Microsoft.Xna.Framework;
 
 namespace Snowberry.Editor.Actions {
-    public abstract class EditorAction {
-        public abstract void Apply();
-        public abstract void Unapply();
+    public class EditorAction {
+        private EditorAction[] children = new EditorAction[0];
+        public IEnumerable<EditorAction> Children {
+            get => children;
+            protected set => children = value?.ToArray() ?? new EditorAction[0];
+        }
+
+        public EditorAction Child {
+            get => children.FirstOrDefault();
+            protected set => children = value == null ? new EditorAction[0] : new[] { value };
+        }
+
+        public Action ApplyAction { get; set; }
+        public Action UnapplyAction { get; set; }
+
+        public EditorAction(params EditorAction[] children) {
+            Children = children;
+        }
+
+        public virtual void Apply() {
+            ApplyAction?.Invoke();
+            foreach (var child in Children) {
+                child.Apply();
+            }
+        }
+
+        public virtual void Unapply() {
+            foreach (var child in Children) {
+                child.Unapply();
+            }
+            UnapplyAction?.Invoke();
+        }
     }
 
     public abstract class EditorAction<TValue> : EditorAction {
-        public TValue OldValue { get; set; }
-        public TValue NewValue { get; set; }
+        public TValue OldValue { get; }
+        public TValue NewValue { get; }
 
         protected EditorAction(TValue oldValue, TValue newValue) {
             OldValue = oldValue;
