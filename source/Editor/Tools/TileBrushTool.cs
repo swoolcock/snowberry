@@ -7,6 +7,7 @@ using Snowberry.Editor.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Snowberry.Editor.Actions;
 
 namespace Snowberry.Editor.Tools {
     public class TileBrushTool : Tool {
@@ -213,14 +214,41 @@ namespace Snowberry.Editor.Tools {
             if (canClick && (MInput.Mouse.PressedLeftButton || (middlePan && MInput.Mouse.PressedRightButton))) {
                 isPainting = true;
             } else if (MInput.Mouse.ReleasedLeftButton || (middlePan && MInput.Mouse.ReleasedRightButton)) {
-                if (Editor.SelectedRoom != null && canClick && isPainting)
-                    for (int x = 0; x < holoFgTileMap.Columns; x++)
-                        for (int y = 0; y < holoFgTileMap.Rows; y++)
-                            if (fg) {
-                                if (holoSetTiles[x, y])
-                                    retile |= Editor.SelectedRoom.SetFgTile(x, y, holoFgTileMap[x, y]);
-                            } else if (holoSetTiles[x, y])
-                                retile |= Editor.SelectedRoom.SetBgTile(x, y, holoBgTileMap[x, y]);
+                if (Editor.SelectedRoom != null && canClick && isPainting) {
+                    // find the dirty rectangle
+                    int minX = int.MaxValue, maxX = int.MinValue, minY = int.MaxValue, maxY = int.MinValue;
+                    for (int x = 0; x < holoSetTiles.Columns; x++) {
+                        for (int y = 0; y < holoSetTiles.Rows; y++) {
+                            if (holoSetTiles[x, y]) {
+                                if (minX > x) minX = x;
+                                if (maxX < x) maxX = x;
+                                if (minY > y) minY = y;
+                                if (maxY < y) maxY = y;
+                            }
+                        }
+                    }
+
+                    var dirtyRectangle = new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
+
+                    // read the old contents
+                    var oldData = Editor.SelectedRoom.GetTiles(fg, dirtyRectangle);
+
+                    // set the data
+                    var tileMap = fg ? holoFgTileMap : holoBgTileMap;
+                    for (int x = 0; x < tileMap.Columns; x++) {
+                        for (int y = 0; y < tileMap.Rows; y++) {
+                            if (holoSetTiles[x, y]) {
+                                retile |= Editor.SelectedRoom.SetTile(fg, x, y, tileMap[x, y]);
+                            }
+                        }
+                    }
+
+                    // read the new contents
+                    var newData = Editor.SelectedRoom.GetTiles(fg, dirtyRectangle);
+
+                    // push an editor action without applying
+                    Editor.UndoRedoStack.PushAction(new TileBrushEditorAction(Editor.SelectedRoom, fg, dirtyRectangle, oldData, newData));
+                }
 
                 if (retile) {
                     Editor.SelectedRoom.Autotile();
@@ -269,7 +297,7 @@ namespace Snowberry.Editor.Tools {
                                 char origTile = Editor.SelectedRoom.GetTile(fg, x, y);
 
                                 bool inside(int cx, int cy) {
-                                    return (cx >= 0 && cy >= 0 && cx < Editor.SelectedRoom.Width && cy < Editor.SelectedRoom.Height) && Editor.SelectedRoom.GetTile(fg, cx, cy) == origTile;
+                                    return cx >= 0 && cy >= 0 && cx < Editor.SelectedRoom.Width && cy < Editor.SelectedRoom.Height && Editor.SelectedRoom.GetTile(fg, cx, cy) == origTile;
                                 }
 
                                 Queue<Point> toCheck = new Queue<Point>();
